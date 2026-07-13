@@ -33,12 +33,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+DEFAULT_DEV_ORIGINS = [
+    "http://localhost:5173", "http://127.0.0.1:5173",
+    "http://localhost:5174", "http://127.0.0.1:5174",
+]
+
+# ALLOWED_ORIGINS: comma-separated extra origins (e.g. the deployed Vercel
+# URL) to allow alongside the local dev ports -- set this in Render/Railway
+# env vars rather than hardcoding a production URL here.
+_extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173", "http://127.0.0.1:5173",
-        "http://localhost:5174", "http://127.0.0.1:5174",
-    ],
+    allow_origins=DEFAULT_DEV_ORIGINS + _extra_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

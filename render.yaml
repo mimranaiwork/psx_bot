@@ -7,9 +7,16 @@ services:
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      # sync: false on both -- these are set manually (dashboard or API) after
+      # the frontend/admin tooling exist. Without sync: false, every Blueprint
+      # sync (which runs on every push, per autoDeploy) resets ALLOWED_ORIGINS
+      # back to whatever's declared here, silently overwriting a manually-set
+      # value -- which is exactly what happened the first time this was wired up.
       - key: ALLOWED_ORIGINS
-        value: ""
+        sync: false
       - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ADMIN_TOKEN
         sync: false
     # NOTE: Render's free plan doesn't support persistent disks. data/psx_bot.db
     # and data/models/ live on ephemeral storage and are wiped on every

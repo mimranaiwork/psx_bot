@@ -1,0 +1,54 @@
+"""Pydantic request/response models for the API layer."""
+from typing import Any, Optional
+
+from pydantic import BaseModel
+
+
+class SymbolSummary(BaseModel):
+    symbol: str
+    row_count: int
+    latest_date: Optional[str] = None
+
+
+class SignalRecord(BaseModel):
+    id: Optional[int] = None
+    symbol: str
+    signal_date: str
+    signal: str
+    confidence: str
+    model_probability: Optional[float] = None
+    fundamental_flag: Optional[str] = None
+    rationale: Optional[str] = None
+    horizon_days: Optional[int] = None
+    actual_forward_return: Optional[float] = None
+    outcome_correct: Optional[int] = None
+
+
+class BacktestRunRecord(BaseModel):
+    id: Optional[int] = None
+    symbol: str
+    run_date: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    total_trades: Optional[int] = None
+    win_rate: Optional[float] = None
+    sharpe_ratio: Optional[float] = None
+    max_drawdown: Optional[float] = None
+    strategy_return: Optional[float] = None
+    baseline_return: Optional[float] = None
+    notes: Optional[str] = None
+
+
+class LoadPricesRequest(BaseModel):
+    yf_ticker: Optional[str] = None
+    period: str = "5y"
+
+
+class LoadTickerRequest(BaseModel):
+    yf_ticker: Optional[str] = None
+
+
+class ActionResult(BaseModel):
+    symbol: str
+    detail: str
+    data: Optional[dict[str, Any]] = None

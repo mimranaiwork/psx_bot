@@ -10,12 +10,25 @@ guides below cover attaching one.
 
 ## 1. Backend — Render (config-as-code, `render.yaml` already in the repo)
 
+**Use New → Blueprint, not New → Web Service** — a manually-created Web
+Service won't read `render.yaml` and Render will guess a generic
+`gunicorn`/WSGI start command that doesn't apply to this FastAPI/ASGI app.
+
 1. [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint** → connect the `psx_bot` GitHub repo. Render reads `render.yaml` from the repo root automatically.
-2. It provisions a web service on the **Starter** plan (Render's free tier doesn't support persistent disks, and this app needs one) with a 1GB disk mounted at `data/`.
+2. It provisions a web service on the **free** plan (see the persistence caveat below) with the correct build/start commands pre-filled — nothing to type manually.
 3. Set the `ANTHROPIC_API_KEY` env var in the Render dashboard if you want the live LLM rationale layer (optional — falls back to a template without it, per `models/llm_synthesis.py`).
 4. Leave `ALLOWED_ORIGINS` blank for now — come back and set it after the frontend is deployed (step 3 below).
-5. Deploy. Your backend URL will be `https://psx-ai-bot-api.onrender.com` (or whatever Render assigns).
+5. Deploy. Your backend URL will be `https://psx-ai-bot-api.onrender.com` (or whatever Render assigns — it appends a random suffix if that name's taken).
 6. Sanity check: `curl https://<your-render-url>/health` → `{"status":"ok"}`.
+
+**Free plan persistence caveat**: `render.yaml` is on Render's **free**
+plan, which doesn't support persistent disks — `data/psx_bot.db` and
+`data/models/` live on ephemeral storage and are wiped on every
+restart/redeploy, including the automatic spin-down after 15 min idle.
+You'll reload data each time it cold-starts. To persist data across
+restarts, switch `plan: free` to `plan: starter` in `render.yaml` and
+add back a `disk:` block (`name`, `mountPath: /opt/render/project/src/data`,
+`sizeGB: 1`) — Render's cheapest paid tier, ~$7/month at time of writing.
 
 ## 1b. Backend — Railway (alternative)
 
@@ -49,5 +62,5 @@ localhost dev origins, so local development keeps working unchanged.
 ## Gotchas
 
 - **SQLite + multiple instances don't mix.** If you scale the backend to more than one instance on Render/Railway, they'd each see a different (or locked) SQLite file. Fine at one instance; if you need to scale out, migrate to Postgres first (the schema in `db/schema.sql` is plain SQL, not SQLite-specific syntax beyond `AUTOINCREMENT`).
-- **Free tiers sleep.** Render's free web services (not used here, since disks need Starter) and some Railway free-tier behavior spin down on idle — the first request after a while will be slow (cold start). Not an issue on Render Starter, which doesn't sleep.
+- **Free tiers sleep.** Render's free web services and some Railway free-tier behavior spin down on idle — the first request after a while will be slow (cold start), and on Render's free plan that cold start also means a wiped SQLite DB (see above). Not an issue on Render's paid Starter tier, which doesn't sleep and supports persistent disks.
 - **`ANTHROPIC_API_KEY` is optional everywhere.** Without it, `models/llm_synthesis.py` transparently falls back to the deterministic template rationale — nothing breaks.

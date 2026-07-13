@@ -2,7 +2,7 @@ services:
   - type: web
     name: psx-ai-bot-api
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -11,7 +11,8 @@ services:
         value: ""
       - key: ANTHROPIC_API_KEY
         sync: false
-    disk:
-      name: psx-ai-bot-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
+    # NOTE: Render's free plan doesn't support persistent disks. data/psx_bot.db
+    # and data/models/ live on ephemeral storage and are wiped on every
+    # restart/redeploy (including the automatic spin-down after 15min idle).
+    # Reload data after each cold start, or upgrade to a paid plan and add a
+    # `disk:` block (see git history / DEPLOY.md) for persistence.

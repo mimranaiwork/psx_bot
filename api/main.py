@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import database
-from api.routers import symbols, signals, backtests, pipeline
+from api.routers import symbols, signals, backtests, pipeline, admin
 
 
 @asynccontextmanager
@@ -60,3 +60,4 @@ app.include_router(symbols.router)
 app.include_router(signals.router)
 app.include_router(backtests.router)
 app.include_router(pipeline.router)
+app.include_router(admin.router)

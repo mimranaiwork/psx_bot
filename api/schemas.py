@@ -52,3 +52,29 @@ class ActionResult(BaseModel):
     symbol: str
     detail: str
     data: Optional[dict[str, Any]] = None
+
+
+class PriceRowIn(BaseModel):
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int = 0
+
+
+class ImportPricesRequest(BaseModel):
+    rows: list[PriceRowIn]
+
+
+class FundamentalRowIn(BaseModel):
+    period: Optional[str] = None
+    report_date: Optional[str] = None
+    eps: Optional[float] = None
+    revenue: Optional[float] = None
+    net_profit: Optional[float] = None
+    dividend_per_share: Optional[float] = None
+
+
+class ImportFundamentalsRequest(BaseModel):
+    rows: list[FundamentalRowIn]

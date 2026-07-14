@@ -154,6 +154,26 @@ def test_cmd_update_outcomes_reports_zero_when_nothing_elapsed(loaded_price_hist
     assert "Updated 0 past signals" in capsys.readouterr().out
 
 
+# --- screen-breakouts --------------------------------------------------------
+
+def test_cmd_screen_breakouts_reports_none_found(test_db, capsys):
+    main.cmd_screen_breakouts(_ns())
+    assert "No pre-breakout setups found" in capsys.readouterr().out
+
+
+def test_cmd_screen_breakouts_flags_coiling_setup(test_db, capsys):
+    from tests.test_breakout_features import _coiling_setup_df
+
+    rows = _coiling_setup_df().rename(columns={"trade_date": "date"})
+    rows["date"] = rows["date"].dt.strftime("%Y-%m-%d")
+    database.upsert_price_rows("COIL", rows.to_dict("records"))
+
+    main.cmd_screen_breakouts(_ns())
+    out = capsys.readouterr().out
+    assert "1 pre-breakout candidate" in out
+    assert "COIL" in out
+
+
 # --- main() dispatch / argparse wiring --------------------------------------
 
 def test_main_dispatches_init_db_via_argv(test_db, monkeypatch):

@@ -169,6 +169,35 @@ def cmd_update_outcomes(args):
     print(f"Updated {updated} past signals with actual outcomes.")
 
 
+def cmd_screen_breakouts(args):
+    """Scans every loaded symbol for the pre-breakout 'coiling' setup."""
+    import config
+    from features import breakout_features
+
+    min_rows = 20 + config.BREAKOUT_SQUEEZE_LOOKBACK_DAYS
+    symbols_df = database.get_price_symbols_summary()
+    flagged = []
+    for symbol in symbols_df["symbol"]:
+        price_df = database.get_price_history(symbol)
+        if len(price_df) < min_rows:
+            continue
+        result = breakout_features.get_breakout_signal(symbol, price_df)
+        if result.get("is_pre_breakout"):
+            flagged.append(result)
+
+    flagged.sort(key=lambda r: (-r["checks_passed"], r["pct_from_high"]))
+
+    if not flagged:
+        print("No pre-breakout setups found among currently loaded symbols.")
+        return
+
+    print(f"{len(flagged)} pre-breakout candidate(s):\n")
+    for r in flagged:
+        print(f"  {r['symbol']:10s} checks={r['checks_passed']}/4  "
+              f"close={r['close']:.2f}  {r['pct_from_high']:.1%} below high  "
+              f"RSI={r['rsi_14']:.1f}  vol_ratio={r['volume_spike_ratio']:.2f}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="PSX AI Insights Bot CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -205,6 +234,8 @@ def main():
     p = sub.add_parser("update-outcomes")
     p.add_argument("--symbol", required=True)
 
+    sub.add_parser("screen-breakouts")
+
     args = parser.parse_args()
     commands = {
         "init-db": cmd_init_db,
@@ -217,6 +248,7 @@ def main():
         "backtest": cmd_backtest,
         "signal": cmd_signal,
         "update-outcomes": cmd_update_outcomes,
+        "screen-breakouts": cmd_screen_breakouts,
     }
     commands[args.command](args)
 

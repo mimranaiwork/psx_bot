@@ -4,6 +4,7 @@ import SymbolListPage from "./pages/SymbolListPage";
 import SymbolDetailPage from "./pages/SymbolDetailPage";
 import AccuracyLogPage from "./pages/AccuracyLogPage";
 import BacktestsPage from "./pages/BacktestsPage";
+import BreakoutScreenerPage from "./pages/BreakoutScreenerPage";
 
 const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
   color: isActive ? "var(--series-1)" : "var(--text-primary)",
@@ -35,6 +36,9 @@ function App() {
           <NavLink to="/signals-log" style={navLinkStyle}>
             Accuracy Log
           </NavLink>
+          <NavLink to="/breakouts" style={navLinkStyle}>
+            Breakout Screener
+          </NavLink>
         </nav>
       </header>
 
@@ -44,6 +48,7 @@ function App() {
           <Route path="/symbols/:symbol" element={<SymbolDetailPage />} />
           <Route path="/backtests" element={<BacktestsPage />} />
           <Route path="/signals-log" element={<AccuracyLogPage />} />
+          <Route path="/breakouts" element={<BreakoutScreenerPage />} />
         </Routes>
       </main>
     </>

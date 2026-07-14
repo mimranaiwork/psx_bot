@@ -75,6 +75,23 @@ export interface ActionResult<T = Record<string, unknown>> {
   data: T | null;
 }
 
+export interface BreakoutCandidate {
+  symbol: string;
+  is_pre_breakout: boolean;
+  reason?: string;
+  checks_passed?: number;
+  squeeze?: boolean;
+  near_resistance?: boolean;
+  volume_building?: boolean;
+  momentum_ok?: boolean;
+  bb_width_percentile?: number;
+  pct_from_high?: number;
+  volume_spike_ratio?: number;
+  rsi_14?: number;
+  close?: number;
+  trade_date?: string;
+}
+
 class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -106,6 +123,9 @@ export const api = {
 
   backtests: (symbol?: string) =>
     request<BacktestRun[]>(`/backtests${symbol ? `?symbol=${symbol}` : ""}`),
+
+  breakoutScreener: (flaggedOnly = true) =>
+    request<BreakoutCandidate[]>(`/screener/breakouts?flagged_only=${flaggedOnly}`),
 
   loadPrices: (symbol: string, yfTicker: string, period = "5y") =>
     request<ActionResult>(`/symbols/${symbol}/load-prices`, {

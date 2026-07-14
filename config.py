@@ -46,3 +46,18 @@ LLM_MODEL = "claude-sonnet-4-6"
 # --- Fundamental rule thresholds ---
 EPS_GROWTH_POSITIVE_THRESHOLD = 0.15   # +15% YoY EPS growth => positive flag
 EPS_GROWTH_NEGATIVE_THRESHOLD = -0.10  # -10% YoY EPS growth => negative flag
+
+# --- Pre-breakout screener thresholds ---
+# Flags a "coiling" setup: tight volatility (Bollinger squeeze) near recent
+# resistance, with volume starting to build and momentum not yet
+# overextended. A rule-based pattern match, not a prediction -- see
+# backtest/breakout_backtest.py for whether this setup actually precedes
+# real breakouts historically before trusting it.
+BREAKOUT_SQUEEZE_LOOKBACK_DAYS = 120    # window for the bb_width percentile rank
+BREAKOUT_RESISTANCE_LOOKBACK_DAYS = 50  # window for the rolling high ("resistance")
+BREAKOUT_SQUEEZE_PERCENTILE = 0.20      # bb_width in bottom 20% of its own trailing range
+BREAKOUT_RESISTANCE_PCT = 0.03          # within 3% of the trailing high
+BREAKOUT_VOLUME_RATIO = 1.2             # volume >= 1.2x its 30-day average
+BREAKOUT_RSI_MIN = 45                   # momentum floor -- not already rolling over
+BREAKOUT_RSI_MAX = 70                   # momentum ceiling -- not already overbought/extended
+BREAKOUT_MIN_CHECKS = 3                 # how many of the 4 checks must pass to flag

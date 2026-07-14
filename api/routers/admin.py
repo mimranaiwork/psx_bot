@@ -20,7 +20,10 @@ from fastapi import APIRouter, Header, HTTPException
 
 from db import database
 from ingestion.financial_report_parser import save_report
-from api.schemas import ImportPricesRequest, ImportFundamentalsRequest, ActionResult
+from api.schemas import (
+    ImportPricesRequest, ImportFundamentalsRequest,
+    ImportBacktestRunsRequest, ImportSignalsRequest, ActionResult,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -60,3 +63,36 @@ def import_fundamentals(symbol: str, body: ImportFundamentalsRequest, x_admin_to
         })
         written += 1
     return ActionResult(symbol=symbol, detail=f"Imported {written} fundamentals rows.", data={"rows": written})
+
+
+@router.post("/symbols/{symbol}/import-backtests", response_model=ActionResult)
+def import_backtests(symbol: str, body: ImportBacktestRunsRequest, x_admin_token: str | None = Header(default=None)):
+    _require_admin_token(x_admin_token)
+    database.init_db()
+    for row in body.rows:
+        database.insert_backtest_run({"symbol": symbol, **row.model_dump()})
+    return ActionResult(symbol=symbol, detail=f"Imported {len(body.rows)} backtest runs.", data={"rows": len(body.rows)})
+
+
+@router.post("/symbols/{symbol}/import-signals", response_model=ActionResult)
+def import_signals(symbol: str, body: ImportSignalsRequest, x_admin_token: str | None = Header(default=None)):
+    _require_admin_token(x_admin_token)
+    database.init_db()
+    conn = database.get_connection()
+    try:
+        cur = conn.cursor()
+        for row in body.rows:
+            cur.execute(
+                """
+                INSERT INTO signals_log
+                    (symbol, signal_date, signal, confidence, model_probability,
+                     fundamental_flag, rationale, horizon_days, actual_forward_return, outcome_correct)
+                VALUES (:symbol, :signal_date, :signal, :confidence, :model_probability,
+                        :fundamental_flag, :rationale, :horizon_days, :actual_forward_return, :outcome_correct)
+                """,
+                {"symbol": symbol, **row.model_dump()},
+            )
+        conn.commit()
+    finally:
+        conn.close()
+    return ActionResult(symbol=symbol, detail=f"Imported {len(body.rows)} signals.", data={"rows": len(body.rows)})

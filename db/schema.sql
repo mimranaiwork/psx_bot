@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS financial_reports (
     revenue REAL,
     net_profit REAL,
     dividend_per_share REAL,
-    source_pdf TEXT
+    source_pdf TEXT,
+    UNIQUE (symbol, report_date)
 );
 
 CREATE TABLE IF NOT EXISTS signals_log (

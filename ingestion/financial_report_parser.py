@@ -87,12 +87,19 @@ def parse_pdf(pdf_path, symbol, period, report_date):
 
 
 def save_report(report_dict):
+    """
+    Upserts on (symbol, report_date) -- re-running a loader for a symbol
+    that already has a report for that date replaces it rather than
+    duplicating it (financial_reports.report_date has a UNIQUE(symbol,
+    report_date) constraint precisely so this is enforced at the DB
+    level, not just here).
+    """
     conn = database.get_connection()
     try:
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO financial_reports
+            INSERT OR REPLACE INTO financial_reports
                 (symbol, period, report_date, eps, revenue, net_profit, dividend_per_share, source_pdf)
             VALUES (:symbol, :period, :report_date, :eps, :revenue, :net_profit, :dividend_per_share, :source_pdf)
             """,
